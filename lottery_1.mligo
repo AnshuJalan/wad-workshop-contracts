@@ -27,18 +27,22 @@ let buy_ticket (s: storage): return =
         let new_tickets = abs(s.tickets_available - 1n) in
         // returns extra tez balance to the sender
         let amount_to_return =
-            match s.ticket_cost - Tezos.get_amount () with
+            match s.ticket_cost - (Tezos.get_amount ()) with
             | None -> failwith "SUB_MUTEZ_OVERFLOW"
             | Some r -> r
         in
-        let op = 
-            let sender_contract = match ((Tezos.get_contract_opt sender): unit contract option) with
-                | None -> failwith "CANNOT_GET_SENDER"
-                | Some sender -> sender
-            in Tezos.transaction () amount_to_return sender_contract
+        let ops = 
+            if amount_to_return > 0tez
+            then
+                let sender_contract = match ((Tezos.get_contract_opt sender): unit contract option) with
+                    | None -> failwith "CANNOT_GET_SENDER"
+                    | Some sender -> sender
+                in [Tezos.transaction () amount_to_return sender_contract]
+            else
+                []
         in
 
-        [op],
+        ops,
         {
             s with
                 players = new_players;
@@ -46,13 +50,12 @@ let buy_ticket (s: storage): return =
         }
 
 let end_game (s: storage): return =
-    let sender = Tezos.get_sender () in
     // checks if all tickets have been sold
     if s.tickets_available <> 0n
     then failwith "GAME_IS_YET_TO_END"
     else
         // picks a winner
-        let winner_id = abs((Tezos.get_now ()) - (0: timestamp)) / s.max_tickets in
+        let winner_id = abs((Tezos.get_now ()) - (0: timestamp)) mod s.max_tickets in
         let winner_address =
             match Map.find_opt winner_id s.players with
             | None -> failwith "WINNER_ID_DOESNT_EXIST"
@@ -60,7 +63,7 @@ let end_game (s: storage): return =
         in
         // sends the reward to the winner
         let op = 
-            let winner_contract = match ((Tezos.get_contract_opt sender): unit contract option) with
+            let winner_contract = match ((Tezos.get_contract_opt winner_address): unit contract option) with
                 | None -> failwith "CANNOT_GET_WINNER"
                 | Some w -> w
             in Tezos.transaction () (Tezos.get_balance ()) winner_contract
