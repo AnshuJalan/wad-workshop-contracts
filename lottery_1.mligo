@@ -14,11 +14,12 @@ type return = operation list * storage
 
 let buy_ticket (s: storage): return =
     let sender = Tezos.get_sender () in
+    let amount = Tezos.get_amount () in
     // checks if tickets are available
     if s.tickets_available = 0n
     then failwith "NO_TICKETS_AVAILABLE"
     // checks if the right amount was sent
-    else if (Tezos.get_amount ()) < s.ticket_cost
+    else if amount < s.ticket_cost
     then failwith "INVALID_AMOUNT"
     else
         // updates the players map
@@ -27,7 +28,7 @@ let buy_ticket (s: storage): return =
         let new_tickets = abs(s.tickets_available - 1n) in
         // returns extra tez balance to the sender
         let amount_to_return =
-            match s.ticket_cost - (Tezos.get_amount ()) with
+            match amount - s.ticket_cost with
             | None -> failwith "SUB_MUTEZ_OVERFLOW"
             | Some r -> r
         in
@@ -81,3 +82,6 @@ let main (p, s: param * storage): return =
     match p with
     | Buy_ticket -> buy_ticket s
     | End_game -> end_game s
+
+[@view]
+let players_number ((), s: unit * storage): nat = Map.size s.players

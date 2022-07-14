@@ -29,17 +29,7 @@ let test =
     let storage = Test.get_storage lottery_typed_addr in
     let _ = assert (storage.max_tickets = tickets) in
 
-    // testing the buy_ticket entrypoint
     let lottery_contract = Test.to_contract lottery_typed_addr in
-    let _ = 
-        match (Test.transfer_to_contract lottery_contract Buy_ticket storage.ticket_cost) with
-        | Success _ -> assert true
-        | Fail err -> (
-            let _ = Test.log err in
-            assert false
-        )
-    in
-
     // buy_ticket should fail with wrong amount
     let _ = 
         match (Test.transfer_to_contract lottery_contract Buy_ticket 0tez) with
@@ -51,6 +41,16 @@ let test =
                 then assert true
                 else assert false
             | _ -> assert false
+        )
+    in
+
+    // testing the buy_ticket entrypoint
+    let _ = 
+        match (Test.transfer_to_contract lottery_contract Buy_ticket storage.ticket_cost) with
+        | Success _ -> assert true
+        | Fail err -> (
+            let _ = Test.log err in
+            assert false
         )
     in
 
