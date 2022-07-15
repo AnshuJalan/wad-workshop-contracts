@@ -97,18 +97,6 @@ let test =
         ) 
     in
 
-    // checks that the game cannot be ended before all the tickets are bought
-    let _ = 
-        match (Test.transfer_to_contract lottery_contract End_game 0tez) with
-        | Success _ -> assert false
-        | Fail err -> (
-            match err with
-            | Rejected (err, _) ->
-                if err = (Test.compile_value "GAME_IS_YET_TO_END")
-                then assert true
-                else assert false
-            | _ -> assert false
-        )
-    in
+    // checks that the game cannot be ended be
 
     ()
