@@ -48,10 +48,7 @@ let test =
     let _ = 
         match (Test.transfer_to_contract lottery_contract Buy_ticket storage.ticket_cost) with
         | Success _ -> assert true
-        | Fail err -> (
-            let _ = Test.log err in
-            assert false
-        )
+        | Fail err -> let _ = Test.log err in assert false
     in
 
     // buys the last ticket
